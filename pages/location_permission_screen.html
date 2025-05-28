@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Permission - Temples: Travels and Tales</title>
+    <link rel="stylesheet" href="../css/main.css">
+</head>
+<body class="bg-background min-h-screen">
+    <!-- Main Container -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header with App Title -->
+        <header class="px-6 pt-12 pb-8 text-center">
+            <div class="mb-6">
+                <!-- App Logo/Icon -->
+                <div class="w-20 h-20 bg-primary bg-opacity-10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-12 h-12 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
+                    </svg>
+                </div>
+                
+                <!-- App Title -->
+                <h1 class="font-display text-display-medium text-text-primary mb-2">
+                    Temples: <span class="text-primary">Travels</span> and <span class="text-primary">Tales</span>
+                </h1>
+                <p class="text-text-secondary text-body-large">Discover sacred places near you</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 px-6 pb-6">
+            <!-- Permission Request Section -->
+            <div id="permissionSection" class="text-center mb-8">
+                <!-- Illustration -->
+                <div class="mb-8">
+                    <div class="relative w-48 h-48 mx-auto">
+                        <!-- Temple Illustration -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary-light to-primary rounded-full opacity-10"></div>
+                        <div class="absolute inset-4 bg-surface rounded-full shadow-card flex items-center justify-center">
+                            <svg class="w-20 h-20 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
+                            </svg>
+                        </div>
+                        <!-- Location Pin -->
+                        <div class="absolute -top-2 -right-2 w-8 h-8 bg-info rounded-full flex items-center justify-center shadow-card animate-pulse">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Permission Explanation -->
+                <div class="mb-8">
+                    <h2 class="font-display text-title-large text-text-primary mb-4">Discover Temples Near You</h2>
+                    <p class="text-text-secondary text-body-large leading-relaxed mb-6 max-w-sm mx-auto">
+                        We need your location to find the most relevant temples and sacred places in your area.
+                    </p>
+                    
+                    <!-- Benefits List -->
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center gap-3 text-left max-w-xs mx-auto">
+                            <div class="w-6 h-6 bg-success bg-opacity-10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <span class="text-text-secondary text-body-medium">Find nearby temples instantly</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-left max-w-xs mx-auto">
+                            <div class="w-6 h-6 bg-success bg-opacity-10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <span class="text-text-secondary text-body-medium">Get accurate directions</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-left max-w-xs mx-auto">
+                            <div class="w-6 h-6 bg-success bg-opacity-10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <span class="text-text-secondary text-body-medium">Discover hidden gems</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Permission Button -->
+                <button onclick="requestLocation()" id="locationBtn" class="btn-primary w-full max-w-sm mx-auto mb-4 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Allow Location Access
+                </button>
+
+                <!-- Privacy Note -->
+                <p class="text-text-tertiary text-body-small max-w-sm mx-auto">
+                    Your location data is only used to find nearby temples and is not stored or shared.
+                </p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingSection" class="text-center hidden">
+                <div class="mb-6">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+                </div>
+                <h3 class="font-display text-title-medium text-text-primary mb-2">Getting Your Location</h3>
+                <p class="text-text-secondary text-body-medium">Please wait while we find temples near you...</p>
+            </div>
+
+            <!-- Permission Denied Section -->
+            <div id="deniedSection" class="text-center hidden">
+                <!-- Error Icon -->
+                <div class="mb-6">
+                    <div class="w-16 h-16 bg-error bg-opacity-10 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <h3 class="font-display text-title-medium text-text-primary mb-4">Location Access Denied</h3>
+                <p class="text-text-secondary text-body-medium mb-6 max-w-sm mx-auto">
+                    No worries! You can still search for temples by entering a location manually.
+                </p>
+
+                <!-- Manual Location Input -->
+                <div class="mb-6">
+                    <div class="relative max-w-sm mx-auto">
+                        <input 
+                            type="text" 
+                            id="locationInput" 
+                            placeholder="Enter city, area, or landmark"
+                            class="input-field pr-12"
+                            autocomplete="off"
+                        >
+                        <button onclick="searchLocation()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Autocomplete Suggestions -->
+                    <div id="suggestions" class="mt-2 max-w-sm mx-auto hidden">
+                        <div class="bg-surface border border-border rounded-lg shadow-card overflow-hidden">
+                            <div class="suggestion-item px-4 py-3 hover:bg-stone-50 cursor-pointer border-b border-border" onclick="selectLocation('Delhi, India')">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="text-text-primary text-body-medium">Delhi, India</span>
+                                </div>
+                            </div>
+                            <div class="suggestion-item px-4 py-3 hover:bg-stone-50 cursor-pointer border-b border-border" onclick="selectLocation('Mumbai, India')">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="text-text-primary text-body-medium">Mumbai, India</span>
+                                </div>
+                            </div>
+                            <div class="suggestion-item px-4 py-3 hover:bg-stone-50 cursor-pointer" onclick="selectLocation('Bangalore, India')">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="text-text-primary text-body-medium">Bangalore, India</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alternative Actions -->
+                <div class="space-y-3">
+                    <button onclick="requestLocation()" class="btn-secondary w-full max-w-sm mx-auto">
+                        Try Location Access Again
+                    </button>
+                    
+                    <!-- Browser Settings Help -->
+                    <div class="mt-6 p-4 bg-info bg-opacity-5 border border-info border-opacity-20 rounded-lg max-w-sm mx-auto">
+                        <h4 class="font-display text-title-small text-text-primary mb-2">Enable Location in Browser</h4>
+                        <p class="text-text-secondary text-body-small mb-3">
+                            To use automatic location detection, please enable location access in your browser settings.
+                        </p>
+                        <button onclick="showBrowserHelp()" class="text-info text-body-small font-medium hover:text-blue-700 transition-colors">
+                            Show Instructions →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Browser Help Modal -->
+            <div id="browserHelpModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+                <div class="bg-surface rounded-2xl p-6 max-w-sm w-full max-h-96 overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-display text-title-medium text-text-primary">Browser Settings</h3>
+                        <button onclick="closeBrowserHelp()" class="text-text-tertiary hover:text-text-secondary transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4 text-body-small">
+                        <div>
+                            <h4 class="font-semibold text-text-primary mb-2">Chrome/Edge:</h4>
+                            <p class="text-text-secondary">Click the location icon in the address bar → Allow</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-text-primary mb-2">Firefox:</h4>
+                            <p class="text-text-secondary">Click the shield icon → Permissions → Location → Allow</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-text-primary mb-2">Safari:</h4>
+                            <p class="text-text-secondary">Safari → Preferences → Websites → Location → Allow</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="closeBrowserHelp()" class="btn-primary w-full mt-6">
+                        Got it
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="px-6 pb-6 text-center">
+            <p class="text-text-tertiary text-body-small">
+                © 2025 Temples: Travels and Tales. All Rights Reserved.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        let isLocationRequested = false;
+
+        function requestLocation() {
+            if (isLocationRequested) return;
+            
+            isLocationRequested = true;
+            
+            // Show loading state
+            document.getElementById('permissionSection').classList.add('hidden');
+            document.getElementById('loadingSection').classList.remove('hidden');
+            
+            // Check if geolocation is supported
+            if (!navigator.geolocation) {
+                showLocationDenied();
+                return;
+            }
+            
+            // Request location with timeout
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // 5 minutes
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Success - store location and redirect
+                    const location = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    localStorage.setItem('userLocation', JSON.stringify(location));
+                    
+                    // Simulate processing time
+                    setTimeout(() => {
+                        window.location.href = 'nearby_temples_list_screen.html';
+                    }, 1500);
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    showLocationDenied();
+                },
+                options
+            );
+        }
+
+        function showLocationDenied() {
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('deniedSection').classList.remove('hidden');
+            isLocationRequested = false;
+        }
+
+        function searchLocation() {
+            const input = document.getElementById('locationInput');
+            const query = input.value.trim();
+            
+            if (query.length > 2) {
+                document.getElementById('suggestions').classList.remove('hidden');
+            } else {
+                document.getElementById('suggestions').classList.add('hidden');
+            }
+        }
+
+        function selectLocation(location) {
+            document.getElementById('locationInput').value = location;
+            document.getElementById('suggestions').classList.add('hidden');
+            
+            // Mock coordinates for selected cities
+            const mockLocations = {
+                'Delhi, India': { lat: 28.6139, lng: 77.2090 },
+                'Mumbai, India': { lat: 19.0760, lng: 72.8777 },
+                'Bangalore, India': { lat: 12.9716, lng: 77.5946 }
+            };
+            
+            const coords = mockLocations[location] || { lat: 28.6139, lng: 77.2090 };
+            
+            // Store manual location
+            localStorage.setItem('userLocation', JSON.stringify({
+                ...coords,
+                accuracy: 1000,
+                manual: true,
+                address: location
+            }));
+            
+            // Show loading and redirect
+            document.getElementById('deniedSection').classList.add('hidden');
+            document.getElementById('loadingSection').classList.remove('hidden');
+            
+            setTimeout(() => {
+                window.location.href = 'nearby_temples_list_screen.html';
+            }, 1500);
+        }
+
+        function showBrowserHelp() {
+            document.getElementById('browserHelpModal').classList.remove('hidden');
+        }
+
+        function closeBrowserHelp() {
+            document.getElementById('browserHelpModal').classList.add('hidden');
+        }
+
+        // Input event listener for autocomplete
+        document.addEventListener('DOMContentLoaded', () => {
+            const locationInput = document.getElementById('locationInput');
+            
+            locationInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (query.length > 2) {
+                    document.getElementById('suggestions').classList.remove('hidden');
+                } else {
+                    document.getElementById('suggestions').classList.add('hidden');
+                }
+            });
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#locationInput') && !e.target.closest('#suggestions')) {
+                    document.getElementById('suggestions').classList.add('hidden');
+                }
+            });
+            
+            // Enter key to search
+            locationInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const firstSuggestion = document.querySelector('.suggestion-item');
+                    if (firstSuggestion) {
+                        firstSuggestion.click();
+                    }
+                }
+            });
+        });
+
+        // Check if user already has location permission
+        if (navigator.permissions) {
+            navigator.permissions.query({name: 'geolocation'}).then((result) => {
+                if (result.state === 'granted') {
+                    // Auto-request location if already granted
+                    setTimeout(() => {
+                        requestLocation();
+                    }, 1000);
+                }
+            });
+        }
+    </script>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+<script id="dhws-elementInspector" src="../public/dhws-web-inspector.js"></script>
+<script id="dhws-errorTracker" src="../public/dhws-error-tracker.js"></script>
+</body>
+</html>

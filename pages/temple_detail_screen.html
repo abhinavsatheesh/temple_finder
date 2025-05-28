@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Details - Temple Finder</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-background min-h-screen">
+    <!-- Fixed Header -->
+    <header class="bg-surface border-b border-border sticky top-0 z-50">
+        <div class="flex items-center justify-between px-4 py-3">
+            <button onclick="window.history.back()" class="p-2 rounded-lg hover:bg-stone-50 transition-colors">
+                <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            
+            <h1 id="templeTitle" class="font-display text-title-large text-text-primary">Temple Details</h1>
+            
+            <button onclick="shareTemple()" class="p-2 rounded-lg hover:bg-stone-50 transition-colors">
+                <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Offline Indicator -->
+    <div id="offlineIndicator" class="bg-info bg-opacity-10 border-b border-info border-opacity-20 px-4 py-2 hidden">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <span class="text-info text-body-small font-medium">Viewing cached temple details</span>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="flex items-center justify-center py-16">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+            <p class="text-text-secondary font-medium">Loading temple details...</p>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="px-4 py-16 text-center hidden">
+        <div class="w-16 h-16 bg-error bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+        </div>
+        <h3 class="font-display text-title-medium text-text-primary mb-2">Unable to Load Temple</h3>
+        <p class="text-text-secondary text-body-medium mb-6">Please check your connection and try again.</p>
+        <button onclick="loadTempleDetails()" class="btn-primary">
+            Retry
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden">
+        <!-- Hero Image -->
+        <div class="relative h-64 overflow-hidden">
+            <img 
+                id="templeImage" 
+                src="https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                alt="Temple Image" 
+                class="w-full h-full object-cover"
+                loading="lazy"
+                onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;"
+            >
+            
+            <!-- Image Overlay with Quick Info -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black from-opacity-70 to-transparent p-4">
+                <div class="flex items-end justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="flex items-center gap-1 text-warning">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span id="templeRating" class="text-white text-body-small font-medium">4.8</span>
+                            </div>
+                            <span class="text-white text-body-small opacity-80">•</span>
+                            <span id="templeReviews" class="text-white text-body-small opacity-80">245 reviews</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="templeDistance" class="text-white font-semibold text-body-medium">0.8 km away</span>
+                            <span class="text-white text-body-small opacity-80">•</span>
+                            <span id="travelTime" class="text-white text-body-small opacity-80">2 min walk</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="openDirections()" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-body-small font-medium transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                        Directions
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temple Information Card -->
+        <div class="px-4 py-6">
+            <div class="card">
+                <!-- Temple Name and Status -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h2 id="templeNameDetail" class="font-display text-display-small text-text-primary mb-2">Shri Ram Mandir</h2>
+                        <div class="flex items-center gap-2">
+                            <div id="templeStatus" class="flex items-center gap-1 text-success">
+                                <div class="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                                <span class="text-body-small font-medium">Open Now</span>
+                            </div>
+                            <span class="text-text-tertiary text-body-small">•</span>
+                            <span id="closingTime" class="text-text-secondary text-body-small">Closes at 9:00 PM</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="toggleFavorite()" id="favoriteBtn" class="p-2 rounded-lg hover:bg-stone-50 transition-colors">
+                        <svg class="w-6 h-6 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Address -->
+                <div class="mb-6">
+                    <h3 class="font-display text-title-small text-text-primary mb-2">Address</h3>
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <p id="templeAddress" class="text-text-secondary text-body-medium">Ram Mandir Road, Ayodhya, Uttar Pradesh 224123, India</p>
+                    </div>
+                </div>
+
+                <!-- Visiting Hours -->
+                <div class="mb-6">
+                    <h3 class="font-display text-title-small text-text-primary mb-3">Visiting Hours</h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between py-2 border-b border-border border-opacity-50">
+                            <span class="text-text-secondary text-body-medium">Morning Darshan</span>
+                            <span class="text-text-primary text-body-medium font-medium">5:00 AM - 12:00 PM</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-border border-opacity-50">
+                            <span class="text-text-secondary text-body-medium">Evening Darshan</span>
+                            <span class="text-text-primary text-body-medium font-medium">4:00 PM - 9:00 PM</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2">
+                            <span class="text-text-secondary text-body-medium">Special Occasions</span>
+                            <span class="text-text-primary text-body-medium font-medium">24 Hours</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Significance -->
+                <div class="mb-6">
+                    <h3 class="font-display text-title-small text-text-primary mb-3">Historical Significance</h3>
+                    <p id="historicalText" class="text-text-secondary text-body-medium leading-relaxed">
+                        The Shri Ram Mandir stands as one of the most revered temples in Hindu tradition, marking the birthplace of Lord Rama according to ancient scriptures. This magnificent temple has been a center of devotion for centuries, attracting millions of pilgrims from across the world. The temple's architecture reflects traditional Nagara style with intricate carvings depicting scenes from the Ramayana. Built with pink sandstone from Rajasthan, the temple complex spans over 70 acres and represents the culmination of decades of faith and dedication. The temple's construction incorporates ancient Vedic principles and modern engineering techniques, ensuring its longevity for future generations.
+                    </p>
+                </div>
+
+                <!-- Religious Importance -->
+                <div class="mb-6">
+                    <h3 class="font-display text-title-small text-text-primary mb-3">Religious Importance</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p class="text-text-secondary text-body-medium">Considered the birthplace of Lord Rama, the seventh avatar of Vishnu</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p class="text-text-secondary text-body-medium">Sacred site mentioned in ancient texts including Valmiki Ramayana</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p class="text-text-secondary text-body-medium">Center for major festivals including Ram Navami and Diwali celebrations</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p class="text-text-secondary text-body-medium">Pilgrimage destination for devotees seeking spiritual enlightenment</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="px-4 pb-6">
+            <div class="card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-title-small text-text-primary">Location</h3>
+                    <button onclick="openFullMap()" class="text-primary text-body-small font-medium hover:text-primary-dark transition-colors">
+                        View Full Map
+                    </button>
+                </div>
+                
+                <!-- Map Container -->
+                <div class="relative h-48 rounded-lg overflow-hidden border border-border">
+                    <div id="templeMap" class="w-full h-full"></div>
+                    
+                    <!-- Map Loading -->
+                    <div id="mapLoading" class="absolute inset-0 bg-surface bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-2"></div>
+                            <p class="text-text-secondary text-body-small">Loading map...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distance and Travel Info -->
+                <div class="mt-4 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="text-center">
+                            <p class="text-text-tertiary text-body-small">Distance</p>
+                            <p id="mapDistance" class="text-text-primary font-semibold text-body-medium">0.8 km</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-text-tertiary text-body-small">Walking</p>
+                            <p id="mapWalkTime" class="text-text-primary font-semibold text-body-medium">2 min</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-text-tertiary text-body-small">Driving</p>
+                            <p id="mapDriveTime" class="text-text-primary font-semibold text-body-medium">1 min</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="openDirections()" class="btn-secondary text-body-small py-2 px-4">
+                        Get Directions
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="px-4 pb-8">
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="callTemple()" class="flex items-center justify-center gap-2 bg-surface border border-border rounded-lg py-3 hover:bg-stone-50 transition-colors">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <span class="text-text-primary font-medium text-body-medium">Call</span>
+                </button>
+                
+                <button onclick="shareTemple()" class="flex items-center justify-center gap-2 bg-surface border border-border rounded-lg py-3 hover:bg-stone-50 transition-colors">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                    </svg>
+                    <span class="text-text-primary font-medium text-body-medium">Share</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let templeData = {};
+        let isFavorite = false;
+
+        // Mock user location (Delhi, India)
+        const userLocation = {
+            lat: 28.6139,
+            lng: 77.2090
+        };
+
+        // Mock temple data
+        const mockTemples = {
+            'shri-ram-mandir': {
+                id: 'shri-ram-mandir',
+                name: 'Shri Ram Mandir',
+                lat: 28.6200,
+                lng: 77.2150,
+                distance: 0.8,
+                rating: 4.8,
+                reviews: 245,
+                address: 'Ram Mandir Road, Ayodhya, Uttar Pradesh 224123, India',
+                image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                status: 'open',
+                closingTime: '9:00 PM',
+                walkTime: '2 min',
+                driveTime: '1 min',
+                phone: '+91-9876543210'
+            },
+            'hanuman-temple': {
+                id: 'hanuman-temple',
+                name: 'Hanuman Temple',
+                lat: 28.6180,
+                lng: 77.2200,
+                distance: 1.2,
+                rating: 4.6,
+                reviews: 189,
+                address: 'Hanuman Gali, Connaught Place, New Delhi 110001, India',
+                image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                status: 'open',
+                closingTime: '8:00 PM',
+                walkTime: '4 min',
+                driveTime: '2 min',
+                phone: '+91-9876543211'
+            },
+            'shiva-temple': {
+                id: 'shiva-temple',
+                name: 'Mahadev Shiva Temple',
+                lat: 28.6250,
+                lng: 77.2050,
+                distance: 1.5,
+                rating: 4.9,
+                reviews: 312,
+                address: 'Shiva Mandir Street, Paharganj, New Delhi 110055, India',
+                image: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                status: 'open',
+                closingTime: '10:00 PM',
+                walkTime: '5 min',
+                driveTime: '2 min',
+                phone: '+91-9876543212'
+            }
+        };
+
+        function getTempleIdFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || 'shri-ram-mandir';
+        }
+
+        function loadTempleDetails() {
+            const templeId = getTempleIdFromURL();
+            
+            // Show loading state
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+
+            // Simulate API call
+            setTimeout(() => {
+                try {
+                    templeData = mockTemples[templeId];
+                    
+                    if (!templeData) {
+                        throw new Error('Temple not found');
+                    }
+
+                    populateTempleData();
+                    initializeMap();
+                    
+                    // Hide loading and show content
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+
+                    // Show offline indicator if needed (simulate offline state)
+                    if (Math.random() > 0.7) {
+                        document.getElementById('offlineIndicator').classList.remove('hidden');
+                    }
+
+                } catch (error) {
+                    console.error('Failed to load temple details:', error);
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('errorState').classList.remove('hidden');
+                }
+            }, 1500);
+        }
+
+        function populateTempleData() {
+            // Update header title
+            document.getElementById('templeTitle').textContent = templeData.name;
+            
+            // Update hero image and overlay info
+            document.getElementById('templeImage').src = templeData.image;
+            document.getElementById('templeRating').textContent = templeData.rating;
+            document.getElementById('templeReviews').textContent = `${templeData.reviews} reviews`;
+            document.getElementById('templeDistance').textContent = `${templeData.distance} km away`;
+            document.getElementById('travelTime').textContent = `${templeData.walkTime} walk`;
+
+            // Update temple details
+            document.getElementById('templeNameDetail').textContent = templeData.name;
+            document.getElementById('templeAddress').textContent = templeData.address;
+            document.getElementById('closingTime').textContent = `Closes at ${templeData.closingTime}`;
+
+            // Update map info
+            document.getElementById('mapDistance').textContent = `${templeData.distance} km`;
+            document.getElementById('mapWalkTime').textContent = templeData.walkTime;
+            document.getElementById('mapDriveTime').textContent = templeData.driveTime;
+
+            // Update status
+            const statusElement = document.getElementById('templeStatus');
+            if (templeData.status === 'open') {
+                statusElement.innerHTML = `
+                    <div class="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                    <span class="text-body-small font-medium">Open Now</span>
+                `;
+                statusElement.className = 'flex items-center gap-1 text-success';
+            } else {
+                statusElement.innerHTML = `
+                    <div class="w-2 h-2 bg-error rounded-full"></div>
+                    <span class="text-body-small font-medium">Closed</span>
+                `;
+                statusElement.className = 'flex items-center gap-1 text-error';
+            }
+        }
+
+        function initializeMap() {
+            try {
+                // Initialize map
+                map = L.map('templeMap', {
+                    zoomControl: false,
+                    attributionControl: false,
+                    dragging: false,
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false,
+                    touchZoom: false
+                }).setView([templeData.lat, templeData.lng], 15);
+
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                }).addTo(map);
+
+                // Add temple marker
+                const templeIcon = L.divIcon({
+                    className: 'temple-marker',
+                    html: `
+                        <div class="w-8 h-8 bg-primary rounded-lg shadow-lg flex items-center justify-center border-2 border-white">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
+                            </svg>
+                        </div>
+                    `,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32]
+                });
+
+                L.marker([templeData.lat, templeData.lng], {
+                    icon: templeIcon
+                }).addTo(map);
+
+                // Add user location marker
+                const userIcon = L.divIcon({
+                    className: 'user-location-marker',
+                    html: `
+                        <div class="w-4 h-4 bg-info rounded-full border-2 border-white shadow-lg"></div>
+                    `,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+
+                L.marker([userLocation.lat, userLocation.lng], {
+                    icon: userIcon
+                }).addTo(map);
+
+                // Draw line between user and temple
+                L.polyline([
+                    [userLocation.lat, userLocation.lng],
+                    [templeData.lat, templeData.lng]
+                ], {
+                    color: '#D97706',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '5, 10'
+                }).addTo(map);
+
+                // Fit map to show both markers
+                const group = new L.featureGroup([
+                    L.marker([userLocation.lat, userLocation.lng]),
+                    L.marker([templeData.lat, templeData.lng])
+                ]);
+                map.fitBounds(group.getBounds().pad(0.1));
+
+                // Hide map loading
+                document.getElementById('mapLoading').classList.add('hidden');
+
+            } catch (error) {
+                console.error('Map initialization failed:', error);
+                document.getElementById('mapLoading').innerHTML = `
+                    <div class="text-center">
+                        <svg class="w-8 h-8 text-error mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <p class="text-error text-body-small">Map failed to load</p>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleFavorite() {
+            isFavorite = !isFavorite;
+            const favoriteBtn = document.getElementById('favoriteBtn');
+            
+            if (isFavorite) {
+                favoriteBtn.innerHTML = `
+                    <svg class="w-6 h-6 text-error fill-current" viewBox="0 0 24 24">
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                `;
+            } else {
+                favoriteBtn.innerHTML = `
+                    <svg class="w-6 h-6 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                `;
+            }
+        }
+
+        function openDirections() {
+            const url = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${templeData.lat},${templeData.lng}`;
+            window.open(url, '_blank');
+        }
+
+        function openFullMap() {
+            window.location.href = `map_overview_screen.html?temple=${templeData.id}`;
+        }
+
+        function callTemple() {
+            if (templeData.phone) {
+                window.location.href = `tel:${templeData.phone}`;
+            }
+        }
+
+        function shareTemple() {
+            if (navigator.share) {
+                navigator.share({
+                    title: templeData.name,
+                    text: `Check out ${templeData.name} - ${templeData.address}`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                const shareText = `Check out ${templeData.name} - ${templeData.address}\n${window.location.href}`;
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Temple details copied to clipboard!');
+                });
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTempleDetails();
+        });
+
+        // Handle window resize for map
+        window.addEventListener('resize', () => {
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            }
+        });
+    </script>
+
+    <style>
+        .temple-marker,
+        .user-location-marker {
+            background: transparent;
+            border: none;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .leaflet-popup-tip {
+            background: white;
+        }
+    </style>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+<script id="dhws-elementInspector" src="../public/dhws-web-inspector.js"></script>
+<script id="dhws-errorTracker" src="../public/dhws-error-tracker.js"></script>
+</body>
+</html>

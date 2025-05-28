@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Temples - Temple Finder</title>
+    <link rel="stylesheet" href="../css/main.css">
+</head>
+<body class="bg-background min-h-screen">
+    <!-- Header -->
+    <header class="bg-surface border-b border-border sticky top-0 z-50">
+        <div class="flex items-center justify-between px-4 py-3">
+            <button onclick="window.history.back()" class="p-2 rounded-lg hover:bg-stone-50 transition-colors">
+                <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            
+            <div class="flex-1 text-center">
+                <h1 class="font-display text-title-large text-text-primary">Nearby Temples</h1>
+                <button onclick="changeLocation()" class="flex items-center justify-center gap-1 text-text-secondary text-body-small mt-1 hover:text-primary transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span id="currentLocation">Connaught Place, Delhi</span>
+                </button>
+            </div>
+            
+            <button onclick="window.location.href='map_overview_screen.html'" class="btn-tertiary text-sm">
+                Map View
+            </button>
+        </div>
+    </header>
+
+    <!-- Search Radius Selector -->
+    <div class="bg-surface border-b border-border px-4 py-3">
+        <div class="flex items-center justify-between">
+            <span class="text-text-secondary text-body-medium">Search within:</span>
+            <select id="radiusSelector" onchange="updateSearchRadius()" class="bg-transparent text-primary font-medium text-body-medium border-none focus:ring-0 cursor-pointer">
+                <option value="2">2 km</option>
+                <option value="5" selected>5 km</option>
+                <option value="10">10 km</option>
+                <option value="20">20 km</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Pull to Refresh Indicator -->
+    <div id="pullToRefreshIndicator" class="hidden bg-primary bg-opacity-10 text-center py-2">
+        <div class="flex items-center justify-center gap-2">
+            <div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-primary text-body-small font-medium">Refreshing temples...</span>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="px-4 py-6">
+        <div class="space-y-4">
+            <!-- Loading Skeleton Cards -->
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card animate-pulse">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 bg-stone-200 rounded-lg flex-shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-stone-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-stone-200 rounded w-1/2"></div>
+                        <div class="flex gap-4">
+                            <div class="h-4 bg-stone-200 rounded w-16"></div>
+                            <div class="h-4 bg-stone-200 rounded w-20"></div>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 bg-stone-200 rounded"></div>
+                </div>
+            </div>
+            
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card animate-pulse">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 bg-stone-200 rounded-lg flex-shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-stone-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-stone-200 rounded w-3/5"></div>
+                        <div class="flex gap-4">
+                            <div class="h-4 bg-stone-200 rounded w-16"></div>
+                            <div class="h-4 bg-stone-200 rounded w-20"></div>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 bg-stone-200 rounded"></div>
+                </div>
+            </div>
+            
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card animate-pulse">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 bg-stone-200 rounded-lg flex-shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-stone-200 rounded w-4/5"></div>
+                        <div class="h-4 bg-stone-200 rounded w-1/3"></div>
+                        <div class="flex gap-4">
+                            <div class="h-4 bg-stone-200 rounded w-16"></div>
+                            <div class="h-4 bg-stone-200 rounded w-20"></div>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 bg-stone-200 rounded"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-6">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+            <p class="text-text-secondary text-body-medium mt-2">Finding temples near you...</p>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden px-4 py-12">
+        <div class="text-center max-w-sm mx-auto">
+            <div class="w-16 h-16 bg-error bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="font-display text-title-medium text-text-primary mb-2">Unable to Load Temples</h3>
+            <p class="text-text-secondary text-body-medium mb-6">Please check your internet connection and try again.</p>
+            <button onclick="retryLoadTemples()" class="btn-primary">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Retry
+            </button>
+        </div>
+    </div>
+
+    <!-- No Temples Found State -->
+    <div id="noTemplesState" class="hidden px-4 py-12">
+        <div class="text-center max-w-sm mx-auto">
+            <div class="w-16 h-16 bg-warning bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <h3 class="font-display text-title-medium text-text-primary mb-2">No Temples Nearby</h3>
+            <p class="text-text-secondary text-body-medium mb-6">We couldn't find any temples within <span id="currentRadius">5 km</span> of your location.</p>
+            <button onclick="expandSearchRadius()" class="btn-primary mb-3">
+                Expand Search Area
+            </button>
+            <button onclick="changeLocation()" class="btn-secondary w-full">
+                Change Location
+            </button>
+        </div>
+    </div>
+
+    <!-- Temple List -->
+    <div id="templesList" class="hidden px-4 py-6">
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-text-secondary text-body-medium">
+                <span id="templeCount">12</span> temples found within <span id="displayRadius">5 km</span>
+            </p>
+            <button onclick="sortTemples()" class="flex items-center gap-1 text-primary text-body-small font-medium hover:text-primary-dark transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
+                </svg>
+                Sort
+            </button>
+        </div>
+
+        <div id="templesContainer" class="space-y-4">
+            <!-- Temple Card 1 -->
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card hover:shadow-card-hover transition-all cursor-pointer transform hover:scale-102" onclick="selectTemple('shri-ram-mandir')">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3" 
+                             alt="Shri Ram Mandir" 
+                             class="w-full h-full object-cover"
+                             loading="lazy"
+                             onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-display text-title-small text-text-primary mb-1">Shri Ram Mandir</h3>
+                        <p class="text-text-secondary text-body-small mb-2 line-clamp-2">Ancient temple dedicated to Lord Rama, known for its beautiful architecture and peaceful atmosphere.</p>
+                        <div class="flex items-center gap-4 text-body-small">
+                            <span class="flex items-center gap-1 text-primary font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                0.8 km
+                            </span>
+                            <span class="flex items-center gap-1 text-text-tertiary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                2 min walk
+                            </span>
+                            <div class="flex items-center gap-1 text-warning">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="text-text-secondary font-medium">4.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-text-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Temple Card 2 -->
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card hover:shadow-card-hover transition-all cursor-pointer transform hover:scale-102" onclick="selectTemple('hanuman-temple')">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3" 
+                             alt="Hanuman Temple" 
+                             class="w-full h-full object-cover"
+                             loading="lazy"
+                             onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-display text-title-small text-text-primary mb-1">Hanuman Temple</h3>
+                        <p class="text-text-secondary text-body-small mb-2 line-clamp-2">Sacred temple of Lord Hanuman with daily aarti ceremonies and spiritual gatherings.</p>
+                        <div class="flex items-center gap-4 text-body-small">
+                            <span class="flex items-center gap-1 text-primary font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                1.2 km
+                            </span>
+                            <span class="flex items-center gap-1 text-text-tertiary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                4 min walk
+                            </span>
+                            <div class="flex items-center gap-1 text-warning">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="text-text-secondary font-medium">4.6</span>
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-text-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Temple Card 3 -->
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card hover:shadow-card-hover transition-all cursor-pointer transform hover:scale-102" onclick="selectTemple('shiva-temple')">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3" 
+                             alt="Mahadev Shiva Temple" 
+                             class="w-full h-full object-cover"
+                             loading="lazy"
+                             onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-display text-title-small text-text-primary mb-1">Mahadev Shiva Temple</h3>
+                        <p class="text-text-secondary text-body-small mb-2 line-clamp-2">Historic Shiva temple featuring traditional stone architecture and ancient sculptures.</p>
+                        <div class="flex items-center gap-4 text-body-small">
+                            <span class="flex items-center gap-1 text-primary font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                1.5 km
+                            </span>
+                            <span class="flex items-center gap-1 text-text-tertiary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                5 min walk
+                            </span>
+                            <div class="flex items-center gap-1 text-warning">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="text-text-secondary font-medium">4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-text-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Temple Card 4 -->
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card hover:shadow-card-hover transition-all cursor-pointer transform hover:scale-102" onclick="selectTemple('durga-temple')">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3" 
+                             alt="Maa Durga Temple" 
+                             class="w-full h-full object-cover"
+                             loading="lazy"
+                             onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-display text-title-small text-text-primary mb-1">Maa Durga Temple</h3>
+                        <p class="text-text-secondary text-body-small mb-2 line-clamp-2">Beautiful temple dedicated to Goddess Durga with ornate decorations and vibrant festivals.</p>
+                        <div class="flex items-center gap-4 text-body-small">
+                            <span class="flex items-center gap-1 text-primary font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                2.1 km
+                            </span>
+                            <span class="flex items-center gap-1 text-text-tertiary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                7 min walk
+                            </span>
+                            <div class="flex items-center gap-1 text-warning">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="text-text-secondary font-medium">4.7</span>
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-text-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Temple Card 5 -->
+            <div class="bg-surface border border-border rounded-xl p-4 shadow-card hover:shadow-card-hover transition-all cursor-pointer transform hover:scale-102" onclick="selectTemple('krishna-temple')">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1609920658906-8223bd289001?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3" 
+                             alt="Radha Krishna Temple" 
+                             class="w-full h-full object-cover"
+                             loading="lazy"
+                             onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-display text-title-small text-text-primary mb-1">Radha Krishna Temple</h3>
+                        <p class="text-text-secondary text-body-small mb-2 line-clamp-2">Peaceful temple with beautiful gardens, perfect for meditation and spiritual reflection.</p>
+                        <div class="flex items-center gap-4 text-body-small">
+                            <span class="flex items-center gap-1 text-primary font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                2.8 km
+                            </span>
+                            <span class="flex items-center gap-1 text-text-tertiary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                9 min walk
+                            </span>
+                            <div class="flex items-center gap-1 text-warning">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="text-text-secondary font-medium">4.5</span>
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-text-tertiary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="text-center mt-6">
+            <button onclick="loadMoreTemples()" class="btn-secondary" id="loadMoreBtn">
+                Load More Temples
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentRadius = 5;
+        let isLoading = false;
+        let hasError = false;
+        let temples = [];
+        let displayedTemples = 5;
+        let sortBy = 'distance'; // distance, rating, name
+
+        // Mock temple data
+        const allTemples = [
+            {
+                id: 'shri-ram-mandir',
+                name: 'Shri Ram Mandir',
+                distance: 0.8,
+                rating: 4.8,
+                description: 'Ancient temple dedicated to Lord Rama, known for its beautiful architecture and peaceful atmosphere.',
+                walkTime: '2 min walk',
+                image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'hanuman-temple',
+                name: 'Hanuman Temple',
+                distance: 1.2,
+                rating: 4.6,
+                description: 'Sacred temple of Lord Hanuman with daily aarti ceremonies and spiritual gatherings.',
+                walkTime: '4 min walk',
+                image: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'shiva-temple',
+                name: 'Mahadev Shiva Temple',
+                distance: 1.5,
+                rating: 4.9,
+                description: 'Historic Shiva temple featuring traditional stone architecture and ancient sculptures.',
+                walkTime: '5 min walk',
+                image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'durga-temple',
+                name: 'Maa Durga Temple',
+                distance: 2.1,
+                rating: 4.7,
+                description: 'Beautiful temple dedicated to Goddess Durga with ornate decorations and vibrant festivals.',
+                walkTime: '7 min walk',
+                image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'krishna-temple',
+                name: 'Radha Krishna Temple',
+                distance: 2.8,
+                rating: 4.5,
+                description: 'Peaceful temple with beautiful gardens, perfect for meditation and spiritual reflection.',
+                walkTime: '9 min walk',
+                image: 'https://images.unsplash.com/photo-1609920658906-8223bd289001?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'lakshmi-temple',
+                name: 'Lakshmi Narayan Temple',
+                distance: 3.2,
+                rating: 4.4,
+                description: 'Elegant temple dedicated to Goddess Lakshmi and Lord Narayan with marble architecture.',
+                walkTime: '12 min walk',
+                image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'ganesha-temple',
+                name: 'Ganesha Temple',
+                distance: 3.8,
+                rating: 4.6,
+                description: 'Popular Ganesha temple known for removing obstacles and granting wishes.',
+                walkTime: '15 min walk',
+                image: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            },
+            {
+                id: 'saraswati-temple',
+                name: 'Saraswati Temple',
+                distance: 4.2,
+                rating: 4.3,
+                description: 'Serene temple dedicated to Goddess Saraswati, patron of knowledge and arts.',
+                walkTime: '18 min walk',
+                image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+            }
+        ];
+
+        function initializePage() {
+            // Simulate loading
+            showLoadingState();
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                loadTemples();
+            }, 1500);
+        }
+
+        function showLoadingState() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('templesList').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('noTemplesState').classList.add('hidden');
+        }
+
+        function showTemplesList() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('templesList').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('noTemplesState').classList.add('hidden');
+        }
+
+        function showErrorState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('templesList').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('noTemplesState').classList.add('hidden');
+        }
+
+        function showNoTemplesState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('templesList').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('noTemplesState').classList.remove('hidden');
+        }
+
+        function loadTemples() {
+            try {
+                // Filter temples by radius
+                temples = allTemples.filter(temple => temple.distance <= currentRadius);
+                
+                if (temples.length === 0) {
+                    showNoTemplesState();
+                    return;
+                }
+
+                // Sort temples
+                sortTemplesList();
+                
+                // Update UI
+                updateTempleCount();
+                showTemplesList();
+                
+            } catch (error) {
+                console.error('Error loading temples:', error);
+                showErrorState();
+            }
+        }
+
+        function sortTemplesList() {
+            switch (sortBy) {
+                case 'distance':
+                    temples.sort((a, b) => a.distance - b.distance);
+                    break;
+                case 'rating':
+                    temples.sort((a, b) => b.rating - a.rating);
+                    break;
+                case 'name':
+                    temples.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+            }
+        }
+
+        function updateTempleCount() {
+            document.getElementById('templeCount').textContent = temples.length;
+            document.getElementById('displayRadius').textContent = `${currentRadius} km`;
+            document.getElementById('currentRadius').textContent = `${currentRadius} km`;
+        }
+
+        function updateSearchRadius() {
+            const selector = document.getElementById('radiusSelector');
+            currentRadius = parseInt(selector.value);
+            showLoadingState();
+            setTimeout(loadTemples, 800);
+        }
+
+        function expandSearchRadius() {
+            const selector = document.getElementById('radiusSelector');
+            const currentValue = parseInt(selector.value);
+            
+            if (currentValue < 20) {
+                const nextValue = currentValue === 2 ? 5 : currentValue === 5 ? 10 : 20;
+                selector.value = nextValue;
+                updateSearchRadius();
+            }
+        }
+
+        function sortTemples() {
+            // Cycle through sort options
+            const sortOptions = ['distance', 'rating', 'name'];
+            const currentIndex = sortOptions.indexOf(sortBy);
+            sortBy = sortOptions[(currentIndex + 1) % sortOptions.length];
+            
+            sortTemplesList();
+            
+            // Show feedback
+            const sortButton = event.target.closest('button');
+            const originalText = sortButton.innerHTML;
+            sortButton.innerHTML = `<div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-1"></div>Sorting...`;
+            
+            setTimeout(() => {
+                sortButton.innerHTML = originalText;
+            }, 500);
+        }
+
+        function loadMoreTemples() {
+            const button = document.getElementById('loadMoreBtn');
+            button.innerHTML = '<div class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>Loading...';
+            
+            setTimeout(() => {
+                displayedTemples += 3;
+                if (displayedTemples >= temples.length) {
+                    button.style.display = 'none';
+                } else {
+                    button.innerHTML = 'Load More Temples';
+                }
+            }, 1000);
+        }
+
+        function selectTemple(templeId) {
+            window.location.href = `temple_detail_screen.html?id=${templeId}`;
+        }
+
+        function changeLocation() {
+            window.location.href = 'location_permission_screen.html';
+        }
+
+        function retryLoadTemples() {
+            showLoadingState();
+            setTimeout(loadTemples, 1000);
+        }
+
+        // Pull to refresh functionality
+        let startY = 0;
+        let currentY = 0;
+        let isPulling = false;
+
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0) {
+                startY = e.touches[0].clientY;
+                isPulling = true;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isPulling) return;
+            
+            currentY = e.touches[0].clientY;
+            const pullDistance = currentY - startY;
+            
+            if (pullDistance > 80 && window.scrollY === 0) {
+                document.getElementById('pullToRefreshIndicator').classList.remove('hidden');
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (!isPulling) return;
+            
+            const pullDistance = currentY - startY;
+            
+            if (pullDistance > 80 && window.scrollY === 0) {
+                // Trigger refresh
+                setTimeout(() => {
+                    document.getElementById('pullToRefreshIndicator').classList.add('hidden');
+                    showLoadingState();
+                    setTimeout(loadTemples, 1000);
+                }, 500);
+            } else {
+                document.getElementById('pullToRefreshIndicator').classList.add('hidden');
+            }
+            
+            isPulling = false;
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .transform {
+            transform: translateZ(0);
+        }
+        
+        .hover\:scale-102:hover {
+            transform: scale(1.02);
+        }
+    </style>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+<script id="dhws-elementInspector" src="../public/dhws-web-inspector.js"></script>
+<script id="dhws-errorTracker" src="../public/dhws-error-tracker.js"></script>
+</body>
+</html>
